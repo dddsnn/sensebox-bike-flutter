@@ -6,7 +6,7 @@ import 'package:sensebox_bike/constants.dart';
 import 'package:sensebox_bike/services/error_service.dart';
 import 'package:sensebox_bike/ui/screens/exclusion_zones_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:sensebox_bike/l10n/app_localizations.dart';
 
 class SettingsScreen extends StatelessWidget {
   final Future<bool> Function(Uri url, {LaunchMode mode}) launchUrlFunction;

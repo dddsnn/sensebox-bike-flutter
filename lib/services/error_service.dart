@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sensebox_bike/services/custom_exceptions.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart'; 
+import 'package:sensebox_bike/l10n/app_localizations.dart';
 
 class ErrorService {
   static final GlobalKey<ScaffoldMessengerState> scaffoldKey =

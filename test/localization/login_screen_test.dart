@@ -8,7 +8,7 @@ import 'package:sensebox_bike/ui/widgets/common/email_field.dart';
 import 'package:sensebox_bike/ui/widgets/common/password_field.dart';
 import 'package:sensebox_bike/ui/widgets/opensensemap/login.dart';
 import 'package:sensebox_bike/ui/widgets/opensensemap/register.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:sensebox_bike/l10n/app_localizations.dart';
 import '../mocks.dart';
 import '../test_helpers.dart';
 

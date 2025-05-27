@@ -10,7 +10,7 @@ import 'package:sensebox_bike/ui/widgets/common/button_with_loader.dart';
 import 'package:sensebox_bike/ui/widgets/common/custom_spacer.dart';
 import 'package:sensebox_bike/ui/widgets/common/email_field.dart';
 import 'package:sensebox_bike/ui/widgets/common/password_field.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:sensebox_bike/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class RegisterForm extends StatefulWidget {
