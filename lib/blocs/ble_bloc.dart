@@ -12,6 +12,7 @@ import 'package:vibration/vibration.dart'; // Import the RecordingBloc
 
 class BleBloc with ChangeNotifier {
   final SettingsBloc settingsBloc;
+  final FlutterBluePlusMockable flutterBluePlus;
 
   // Add a ValueNotifier to track Bluetooth status
   final ValueNotifier<bool> isBluetoothEnabledNotifier = ValueNotifier(false);
@@ -45,11 +46,11 @@ class BleBloc with ChangeNotifier {
 
   final ValueNotifier<bool> isReconnectingNotifier = ValueNotifier(false);
 
-  BleBloc(this.settingsBloc) {
-    FlutterBluePlus.setLogLevel(LogLevel.error);
+  BleBloc(this.settingsBloc, this.flutterBluePlus) {
+    flutterBluePlus.setLogLevel(LogLevel.error);
 
     // Listen for Bluetooth adapter state changes
-    FlutterBluePlus.adapterState.listen((state) {
+    flutterBluePlus.adapterState.listen((state) {
       updateBluetoothStatus(state == BluetoothAdapterState.on);
     });
 
@@ -60,26 +61,26 @@ class BleBloc with ChangeNotifier {
   Future<void> _initializeBluetoothStatus() async {
     // Get the current adapter state
     BluetoothAdapterState currentState =
-        await FlutterBluePlus.adapterState.first;
+        await flutterBluePlus.adapterState.first;
     updateBluetoothStatus(currentState == BluetoothAdapterState.on);
   }
 
   // Update Bluetooth status when it changes
   void updateBluetoothStatus(bool isEnabled) {
     isBluetoothEnabledNotifier.value = isEnabled;
-    notifyListeners(); 
+    notifyListeners();
   }
 
   Future<void> startScanning() async {
     disconnectDevice(); // Disconnect if there's a current connection
 
     try {
-      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 10));
+      await flutterBluePlus.startScan(timeout: const Duration(seconds: 10));
     } catch (e) {
       throw ScanPermissionDenied();
     }
 
-    FlutterBluePlus.scanResults.listen((results) {
+    flutterBluePlus.scanResults.listen((results) {
       devicesList.clear();
       for (ScanResult result in results) {
         if (result.device.platformName.startsWith("senseBox")) {
@@ -102,8 +103,8 @@ class BleBloc with ChangeNotifier {
   }
 
   Future<void> connectToId(String id, BuildContext context) async {
-    await FlutterBluePlus.startScan(withNames: [id]);
-    FlutterBluePlus.scanResults.listen((results) async {
+    await flutterBluePlus.startScan(withNames: [id]);
+    flutterBluePlus.scanResults.listen((results) async {
       for (ScanResult result in results) {
         if (result.device.advName.toString() == id) {
           await connectToDevice(result.device, context);
@@ -119,7 +120,7 @@ class BleBloc with ChangeNotifier {
       isConnectingNotifier.value = true; // Notify that we're connecting
       notifyListeners();
 
-      await FlutterBluePlus.stopScan();
+      await flutterBluePlus.stopScan();
       await device.connect();
       _isConnected = true; // Mark as connected
       _userInitiatedDisconnect =
@@ -319,5 +320,100 @@ class BleBloc with ChangeNotifier {
     selectedDeviceNotifier.dispose();
     isBluetoothEnabledNotifier.dispose();
     super.dispose();
+  }
+}
+
+/// Wrapper for FlutterBluePlus in order to easily mock it
+/// Wraps all static calls for testing purposes
+class FlutterBluePlusMockable {
+  Future<void> startScan({
+    List<Guid> withServices = const [],
+    List<String> withRemoteIds = const [],
+    List<String> withNames = const [],
+    List<String> withKeywords = const [],
+    List<MsdFilter> withMsd = const [],
+    List<ServiceDataFilter> withServiceData = const [],
+    Duration? timeout,
+    Duration? removeIfGone,
+    bool continuousUpdates = false,
+    int continuousDivisor = 1,
+    bool oneByOne = false,
+    bool androidLegacy = false,
+    AndroidScanMode androidScanMode = AndroidScanMode.lowLatency,
+    bool androidUsesFineLocation = false,
+    List<Guid> webOptionalServices = const [],
+  }) {
+    return FlutterBluePlus.startScan(
+        withServices: withServices,
+        withRemoteIds: withRemoteIds,
+        withNames: withNames,
+        withKeywords: withKeywords,
+        withMsd: withMsd,
+        withServiceData: withServiceData,
+        timeout: timeout,
+        removeIfGone: removeIfGone,
+        continuousUpdates: continuousUpdates,
+        continuousDivisor: continuousDivisor,
+        oneByOne: oneByOne,
+        androidLegacy: androidLegacy,
+        androidScanMode: androidScanMode,
+        androidUsesFineLocation: androidUsesFineLocation,
+        webOptionalServices: webOptionalServices);
+  }
+
+  Stream<BluetoothAdapterState> get adapterState {
+    return FlutterBluePlus.adapterState;
+  }
+
+  Stream<List<ScanResult>> get scanResults {
+    return FlutterBluePlus.scanResults;
+  }
+
+  bool get isScanningNow {
+    return FlutterBluePlus.isScanningNow;
+  }
+
+  Stream<bool> get isScanning {
+    return FlutterBluePlus.isScanning;
+  }
+
+  Future<void> stopScan() {
+    return FlutterBluePlus.stopScan();
+  }
+
+  Future<void> setLogLevel(LogLevel level, {color = true}) {
+    return FlutterBluePlus.setLogLevel(level, color: color);
+  }
+
+  LogLevel get logLevel {
+    return FlutterBluePlus.logLevel;
+  }
+
+  Future<bool> get isSupported {
+    return FlutterBluePlus.isSupported;
+  }
+
+  Future<String> get adapterName {
+    return FlutterBluePlus.adapterName;
+  }
+
+  Future<void> turnOn({int timeout = 60}) {
+    return FlutterBluePlus.turnOn(timeout: timeout);
+  }
+
+  List<BluetoothDevice> get connectedDevices {
+    return FlutterBluePlus.connectedDevices;
+  }
+
+  Future<List<BluetoothDevice>> systemDevices(List<Guid> withServices) {
+    return FlutterBluePlus.systemDevices(withServices);
+  }
+
+  Future<PhySupport> getPhySupport() {
+    return FlutterBluePlus.getPhySupport();
+  }
+
+  Future<List<BluetoothDevice>> get bondedDevices {
+    return FlutterBluePlus.bondedDevices;
   }
 }

@@ -71,7 +71,7 @@ class SenseBoxBikeApp extends StatelessWidget {
     // Initialize providers at the top level
     final settingsBloc = SettingsBloc();
     final isarService = IsarService();
-    final bleBloc = BleBloc(settingsBloc);
+    final bleBloc = BleBloc(settingsBloc, FlutterBluePlusMockable());
     final openSenseMapBloc = OpenSenseMapBloc();
     final trackBloc = TrackBloc(isarService);
     final recordingBloc = RecordingBloc(
