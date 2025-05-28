@@ -27,7 +27,7 @@ class BleBloc with ChangeNotifier {
   bool _isConnected = false; // Track the connection status
   bool _userInitiatedDisconnect =
       false; // Track if disconnect was user-initiated
-  final Map<String, StreamController<List<double>>> _characteristicStreams = {};
+  final Map<String, StreamController<Uint8List>> _characteristicStreams = {};
 
   final Map<String, StreamController<List<String>>>
       _characteristicStringStreams = {};
@@ -267,13 +267,12 @@ class BleBloc with ChangeNotifier {
 
   Future<void> _listenToCharacteristic(
       BluetoothCharacteristic characteristic) async {
-    final controller = StreamController<List<double>>();
+    final controller = StreamController<Uint8List>();
     _characteristicStreams[characteristic.uuid.toString()] = controller;
 
     await characteristic.setNotifyValue(true);
     characteristic.onValueReceived.listen((value) {
-      List<double> parsedData = _parseData(Uint8List.fromList(value));
-      controller.add(parsedData);
+      controller.add(Uint8List.fromList(value));
     });
   }
 
@@ -291,23 +290,11 @@ class BleBloc with ChangeNotifier {
     });
   }
 
-  Stream<List<double>> getCharacteristicStream(String characteristicUuid) {
+  Stream<Uint8List> getCharacteristicStream(String characteristicUuid) {
     if (!_characteristicStreams.containsKey(characteristicUuid)) {
       throw Exception('Characteristic stream not found');
     }
     return _characteristicStreams[characteristicUuid]!.stream;
-  }
-
-  List<double> _parseData(Uint8List value) {
-    // This method will convert the incoming data to a list of doubles
-    List<double> parsedValues = [];
-    for (int i = 0; i < value.length; i += 4) {
-      if (i + 4 <= value.length) {
-        parsedValues.add(
-            ByteData.sublistView(value, i, i + 4).getFloat32(0, Endian.little));
-      }
-    }
-    return parsedValues;
   }
 
   @override

@@ -1,10 +1,24 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:sensebox_bike/blocs/ble_bloc.dart';
 import 'package:sensebox_bike/blocs/geolocation_bloc.dart';
 import 'package:sensebox_bike/models/sensor_data.dart';
 import 'package:sensebox_bike/models/geolocation_data.dart';
 import 'package:sensebox_bike/services/isar_service.dart';
 import 'package:flutter/material.dart';
+
+List<double> decodeLittleEndianFloat32s(Uint8List value) {
+  // This method converts the incoming data from a characteristic to a list of
+  // doubles, assuming little endian byte order.
+  List<double> parsedValues = [];
+  for (int i = 0; i < value.length; i += 4) {
+    if (i + 4 <= value.length) {
+      parsedValues.add(
+          ByteData.sublistView(value, i, i + 4).getFloat32(0, Endian.little));
+    }
+  }
+  return parsedValues;
+}
 
 abstract class Sensor {
   final String characteristicUuid;
@@ -39,8 +53,10 @@ abstract class Sensor {
   void startListening() async {
     try {
       // Listen to the sensor data stream
-      _subscription =
-          bleBloc.getCharacteristicStream(characteristicUuid).listen((data) {
+      _subscription = bleBloc
+          .getCharacteristicStream(characteristicUuid)
+          .map(decodeLittleEndianFloat32s)
+          .listen((data) {
         onDataReceived(data);
       });
 
