@@ -39,10 +39,8 @@ abstract class Sensor {
   void startListening() async {
     try {
       // Listen to the sensor data stream
-      _subscription = bleBloc
-          .getCharacteristicStream(characteristicUuid)
-          .stream
-          .listen((data) {
+      _subscription =
+          bleBloc.getCharacteristicStream(characteristicUuid).listen((data) {
         onDataReceived(data);
       });
 

@@ -291,12 +291,11 @@ class BleBloc with ChangeNotifier {
     });
   }
 
-  StreamController<List<double>> getCharacteristicStream(
-      String characteristicUuid) {
+  Stream<List<double>> getCharacteristicStream(String characteristicUuid) {
     if (!_characteristicStreams.containsKey(characteristicUuid)) {
       throw Exception('Characteristic stream not found');
     }
-    return _characteristicStreams[characteristicUuid]!;
+    return _characteristicStreams[characteristicUuid]!.stream;
   }
 
   List<double> _parseData(Uint8List value) {

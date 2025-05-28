@@ -64,7 +64,6 @@ void main() {
   Stream<List<double>> characteristicStream() {
     return bleBloc
         .getCharacteristicStream(characteristicGuid.str)
-        .stream
         .timeout(Duration(milliseconds: 2), onTimeout: (sink) {
       sink.close();
     });
