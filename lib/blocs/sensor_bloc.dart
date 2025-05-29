@@ -7,6 +7,7 @@ import 'package:sensebox_bike/sensors/finedust_sensor.dart';
 import 'package:sensebox_bike/sensors/gps_sensor.dart';
 import 'package:sensebox_bike/sensors/humidity_sensor.dart';
 import 'package:sensebox_bike/sensors/overtaking_prediction_sensor.dart';
+import 'package:sensebox_bike/sensors/raw_acceleration_sensor.dart';
 import 'package:sensebox_bike/sensors/sensor.dart';
 import 'package:sensebox_bike/sensors/surface_anomaly_sensor.dart';
 import 'package:sensebox_bike/sensors/surface_classification_sensor.dart';
@@ -50,6 +51,7 @@ class SensorBloc with ChangeNotifier {
     _sensors.add(SurfaceAnomalySensor(bleBloc, geolocationBloc, isarService));
     _sensors.add(FinedustSensor(bleBloc, geolocationBloc, isarService));
     _sensors.add(GPSSensor(bleBloc, geolocationBloc, isarService));
+    _sensors.add(RawAccelerationSensor(bleBloc, geolocationBloc, isarService));
   }
 
   void _startListening() {
