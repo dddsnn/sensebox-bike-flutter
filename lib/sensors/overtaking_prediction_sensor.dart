@@ -9,7 +9,7 @@ import 'package:sensebox_bike/ui/widgets/sensor/sensor_card.dart';
 import 'package:sensebox_bike/utils/sensor_utils.dart';
 import 'package:sensebox_bike/l10n/app_localizations.dart';
 
-class OvertakingPredictionSensor extends Sensor {
+class OvertakingPredictionSensor extends LocationAggregatingSensor {
   List<double> _latestPrediction = [0.0];
 
   @override

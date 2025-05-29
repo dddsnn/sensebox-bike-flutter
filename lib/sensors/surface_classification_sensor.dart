@@ -8,7 +8,7 @@ import 'package:sensebox_bike/ui/widgets/sensor/sensor_card.dart';
 import 'package:sensebox_bike/utils/sensor_utils.dart';
 import 'package:sensebox_bike/l10n/app_localizations.dart';
 
-class SurfaceClassificationSensor extends Sensor {
+class SurfaceClassificationSensor extends LocationAggregatingSensor {
   double _latestAsphalt = 0.0;
   double _latestCompacted = 0.0;
   double _latestPaving = 0.0;

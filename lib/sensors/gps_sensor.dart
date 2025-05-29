@@ -12,7 +12,7 @@ import 'package:sensebox_bike/ui/widgets/sensor/sensor_card.dart';
 import 'package:sensebox_bike/utils/sensor_utils.dart';
 import 'package:sensebox_bike/l10n/app_localizations.dart';
 
-class GPSSensor extends Sensor {
+class GPSSensor extends LocationAggregatingSensor {
   double _latestLat = 0.0;
   double _latestLng = 0.0;
   double _latestSpd = 0.0;

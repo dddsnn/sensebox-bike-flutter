@@ -7,7 +7,7 @@ import 'package:sensebox_bike/ui/widgets/sensor/sensor_card.dart';
 import 'package:sensebox_bike/utils/sensor_utils.dart';
 import 'package:sensebox_bike/l10n/app_localizations.dart';
 
-class SurfaceAnomalySensor extends Sensor {
+class SurfaceAnomalySensor extends LocationAggregatingSensor {
   List<double> _latestAnomalyValue = [0.0];
 
   @override

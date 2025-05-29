@@ -8,7 +8,7 @@ import 'package:sensebox_bike/ui/widgets/sensor/sensor_card.dart';
 import 'package:sensebox_bike/utils/sensor_utils.dart';
 import 'package:sensebox_bike/l10n/app_localizations.dart';
 
-class AccelerationSensor extends Sensor {
+class AccelerationSensor extends LocationAggregatingSensor {
   double _latestX = 0.0;
   double _latestY = 0.0;
   double _latestZ = 0.0;

@@ -20,61 +20,56 @@ List<double> decodeLittleEndianFloat32s(Uint8List value) {
   return parsedValues;
 }
 
-abstract class Sensor {
+abstract class Sensor<DataType> {
   final String characteristicUuid;
   final String title;
-  final List<String> attributes;
 
   final BleBloc bleBloc;
   final GeolocationBloc geolocationBloc;
   final IsarService isarService;
-  StreamSubscription<List<double>>? _subscription;
-
-  final StreamController<List<double>> _valueController =
-      StreamController<List<double>>.broadcast();
-  Stream<List<double>> get valueStream => _valueController.stream;
-
-  final List<List<double>> _valueBuffer = [];
-
-  late int uiPriority;
-
-  late Icon uiIcon;
-  late Color uiColor;
+  StreamSubscription<DataType>? _subscription;
 
   Sensor(
     this.characteristicUuid,
     this.title,
-    this.attributes,
     this.bleBloc,
     this.geolocationBloc,
     this.isarService,
   );
 
+  int get uiPriority;
+
+  /// Decodes characteristic bytes into a useful data type.
+  DataType decodeCharacteristicData(Uint8List value);
+
+  /// Called whenever new  sensor data comes in.
+  void onDataReceived(DataType data);
+
+  /// Called whenever a new geolocation is available.
+  void onChangedGeolocation(GeolocationData geolocationData);
+
+  /// Builds a UI representation of the sensor.
+  Widget buildWidget();
+
+  void dispose() {
+    stopListening();
+  }
+
   void startListening() async {
     try {
-      // Listen to the sensor data stream
+      // Listen to the sensor data stream.
       _subscription = bleBloc
           .getCharacteristicStream(characteristicUuid)
-          .map(decodeLittleEndianFloat32s)
-          .listen((data) {
-        onDataReceived(data);
-      });
+          .map(decodeCharacteristicData)
+          .listen(onDataReceived);
 
-      // Listen to geolocation updates
+      // Listen to geolocation updates.
       (await isarService.geolocationService.getGeolocationStream())
           .listen((_) async {
-        if (_valueBuffer.isNotEmpty) {
-          GeolocationData? geolocationData = await isarService
-              .geolocationService
-              .getLastGeolocationData(); // Get the latest geolocation data
-
-          if (geolocationData == null) {
-            return;
-          }
-
-          _aggregateAndStoreData(
-              geolocationData); // Aggregate and store sensor data
-          _valueBuffer.clear(); // Clear the list after aggregation
+        GeolocationData? geolocationData = await isarService.geolocationService
+            .getLastGeolocationData(); // Get the latest geolocation data
+        if (geolocationData != null) {
+          onChangedGeolocation(geolocationData);
         }
       });
     } catch (e) {
@@ -85,12 +80,60 @@ abstract class Sensor {
   void stopListening() {
     _subscription?.cancel();
   }
+}
 
-  // Method to handle incoming sensor data
+/// A sensor aggregating data to geolocation updates.
+///
+/// A sensor whose data type is a list of doubles, i.e. each time new sensor
+/// data comes in, the byte sequence is decoded as a sequence of little endian
+/// float32s. New data is stored in a buffer. Whenever a geolocation update is
+/// available, all buffered data is aggregated using the abstract
+/// [aggregateData], saved as a [SensorData], and the buffer reset.
+abstract class LocationAggregatingSensor extends Sensor<List<double>> {
+  final List<String> attributes;
+  final StreamController<List<double>> _valueController =
+      StreamController<List<double>>.broadcast();
+  Stream<List<double>> get valueStream => _valueController.stream;
+
+  final List<List<double>> _valueBuffer = [];
+
+  LocationAggregatingSensor(
+    characteristicUuid,
+    title,
+    this.attributes,
+    bleBloc,
+    geolocationBloc,
+    isarService,
+  ) : super(
+          characteristicUuid,
+          title,
+          bleBloc,
+          geolocationBloc,
+          isarService,
+        );
+
+  /// Aggregates many sensor data points into a single one.
+  List<double> aggregateData(List<List<double>> valueBuffer);
+
+  @override
+  List<double> decodeCharacteristicData(Uint8List value) {
+    return decodeLittleEndianFloat32s(value);
+  }
+
+  @override
   void onDataReceived(List<double> data) {
     if (data.isNotEmpty) {
       _valueBuffer.add(data); // Buffer the sensor data
       _valueController.add(data); // Emit the latest sensor value to the stream
+    }
+  }
+
+  @override
+  void onChangedGeolocation(GeolocationData geolocationData) {
+    if (_valueBuffer.isNotEmpty) {
+      _aggregateAndStoreData(
+          geolocationData); // Aggregate and store sensor data
+      _valueBuffer.clear(); // Clear the list after aggregation
     }
   }
 
@@ -135,14 +178,9 @@ abstract class Sensor {
     isarService.sensorService.saveSensorData(sensorData);
   }
 
-  // Abstract method to build a widget for the sensor (UI representation)
-  Widget buildWidget();
-
-  // Abstract method to aggregate sensor data
-  List<double> aggregateData(List<List<double>> valueBuffer);
-
+  @override
   void dispose() {
-    stopListening();
+    super.dispose();
     _valueController
         .close(); // Close the stream controller to prevent memory leaks
   }

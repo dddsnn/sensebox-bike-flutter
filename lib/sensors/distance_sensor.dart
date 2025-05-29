@@ -9,7 +9,7 @@ import 'package:sensebox_bike/ui/widgets/sensor/sensor_card.dart';
 import 'package:sensebox_bike/utils/sensor_utils.dart';
 import 'package:sensebox_bike/l10n/app_localizations.dart';
 
-class DistanceSensor extends Sensor {
+class DistanceSensor extends LocationAggregatingSensor {
   List<double> _latestValue = [0.0];
 
   @override

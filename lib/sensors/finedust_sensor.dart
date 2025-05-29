@@ -8,7 +8,7 @@ import 'package:sensebox_bike/ui/widgets/sensor/sensor_card.dart';
 import 'package:sensebox_bike/utils/sensor_utils.dart';
 import 'package:sensebox_bike/l10n/app_localizations.dart';
 
-class FinedustSensor extends Sensor {
+class FinedustSensor extends LocationAggregatingSensor {
   double _latestPM1 = 0.0;
   double _latestPM2_5 = 0.0;
   double _latestPM4 = 0.0;
