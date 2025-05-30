@@ -31,8 +31,8 @@ class HomeScreen extends StatelessWidget {
           SliverPersistentHeader(
             delegate: _SliverAppBarDelegate(
               minHeight: MediaQuery.of(context).size.height * 0.33,
-              maxHeight: MediaQuery.of(context).size.height *
-                  (bleBloc.isConnected ? 0.65 : 0.85),
+              maxHeight: MediaQuery.of(context).size.height * 0.2,
+              // (bleBloc.isConnected ? 0.65 : 0.85),
               child: Stack(
                 children: [
                   const SizedBox(
@@ -75,13 +75,13 @@ class _SenseBoxSelectionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final OpenSenseMapBloc osemBloc = Provider.of<OpenSenseMapBloc>(context);
-    
+
     // Show the button only if the user is authenticated
     if (!osemBloc.isAuthenticated) {
       return const SizedBox
           .shrink(); // Return an empty widget if not authenticated
     }
-  
+
     return IconButton.outlined(
         style: OutlinedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
@@ -261,6 +261,7 @@ class _ConnectButton extends StatelessWidget {
     );
   }
 }
+
 // Start/Stop button
 class _StartStopButton extends StatelessWidget {
   final RecordingBloc recordingBloc;
@@ -351,19 +352,65 @@ class _SensorGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // return Text('asd');
     final widgets = sensorBloc.getSensorWidgets();
+    // return SliverGrid(
+    //     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+    //       maxCrossAxisExtent: 200.0,
+    //       mainAxisSpacing: 10.0,
+    //       crossAxisSpacing: 10.0,
+    //       childAspectRatio: 4.0,
+    //     ),
+    //     delegate: SliverChildListDelegate([
+    //       widgets[0],
+    //       Container(
+    //         alignment: Alignment.center,
+    //         child: Text('grid item '),
+    //       )
+    //     ])
+    //     // SliverChildBuilderDelegate(
+    //     //   (BuildContext context, int index) {
+    //     //     return Container(
+    //     //       alignment: Alignment.center,
+    //     //       color: Colors.teal[100 * (index % 9)],
+    //     //       child: Text('grid item $index'),
+    //     //     );
+    //     //   },
+    //     //   childCount: 20,
+    //     // ),
+    //     );
+    // // return Text("nothing");
+    // return widgets.length > 6 ? widgets[6] : Text("nothing");
+    print('--------------------');
+    print(widgets.length);
+    String avail = sensorBloc.bleBloc.availableCharacteristics.value
+        .map((c) => c.characteristicUuid)
+        .toString();
     return SliverGrid(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
       ),
-      delegate: SliverChildBuilderDelegate(
-        (BuildContext context, int index) {
-          return index < widgets.length ? widgets[index] : null;
-        },
-        childCount: widgets.length,
-      ),
+      delegate: SliverChildListDelegate(widgets +
+          [
+            Text('available characteristics: $avail'),
+          ]),
+      // delegate: SliverChildBuilderDelegate(
+      //   (BuildContext context, int index) {
+      //     return Text('widget $index');
+      //   },
+      //   childCount: 11,
+      // ),
+      // delegate: SliverChildBuilderDelegate(
+      //   (BuildContext context, int index) {
+      //     // return widgets[0];
+      //     // return Text('asd');
+      //     return index < widgets.length ? widgets[index] : null;
+      //     return index < widgets.length ? widgets[index] : Text("nothing");
+      //   },
+      //   childCount: widgets.length,
+      // ),
     );
   }
 }

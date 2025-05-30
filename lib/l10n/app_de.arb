@@ -140,6 +140,7 @@
     "sensorGPSSpeed": "GPS Geschwindigkeit",
     "sensorGPSError": "Kein GPS-Fix",
     "sensorAcceleration": "Beschleunigung",
+    "sensorRawAcceleration": "Beschleunigung",
     "sensorFinedust": "Feinstaub",
     "sensorDistanceShort": "Abstand",
     "campaignLoadError": "Die Liste der Kampagnen konnte nicht geladen werden.",

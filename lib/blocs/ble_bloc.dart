@@ -268,6 +268,8 @@ class BleBloc with ChangeNotifier {
   Future<void> _listenToCharacteristic(
       BluetoothCharacteristic characteristic) async {
     final controller = StreamController<Uint8List>();
+    // REFACTOR can we just store the characteristicstream mapped to
+    // Uint8List.fromList? but what about closing the controllers on dispose?++++++++
     _characteristicStreams[characteristic.uuid.toString()] = controller;
 
     await characteristic.setNotifyValue(true);
