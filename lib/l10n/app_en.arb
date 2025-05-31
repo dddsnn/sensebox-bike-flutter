@@ -140,6 +140,7 @@
     "sensorGPSSpeed": "GPS Speed",
     "sensorGPSError": "No GPS Fix",
     "sensorAcceleration": "Acceleration",
+    "sensorRawAcceleration": "Raw Acceleration",
     "sensorFinedust": "Finedust",
     "sensorDistanceShort": "Distance",
     "campaignLoadError": "Failed to load list of campaigns.",
