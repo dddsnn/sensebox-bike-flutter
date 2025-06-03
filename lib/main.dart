@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:path_provider/path_provider.dart'; //TODO remove++++++++
+
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -23,9 +25,12 @@ import 'package:sensebox_bike/ui/screens/app_home.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:sensebox_bike/l10n/app_localizations.dart';
 
+String asdfDataDir = ''; //TODO remove++++++++
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env", mergeWith: Platform.environment);
+  asdfDataDir =
+      (await getApplicationDocumentsDirectory()).path; //TODO remove++++++++
 
   await SentryFlutter.init(
     (options) {

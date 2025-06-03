@@ -63,6 +63,8 @@ abstract class Sensor<DataType> {
           .map(decodeCharacteristicData)
           .listen(onDataReceived);
 
+      // REFACTOR instead of watching for changes and then querying the new
+      // location, watch the query and get the new location immediately+++++++++
       // Listen to geolocation updates.
       (await isarService.geolocationService.getGeolocationStream())
           .listen((_) async {

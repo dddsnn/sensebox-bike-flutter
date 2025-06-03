@@ -27,7 +27,7 @@ class _AppHomeState extends State<AppHome> {
   @override
   Widget build(BuildContext context) {
     final openSenseMapBloc = Provider.of<OpenSenseMapBloc>(context);
-    
+
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,

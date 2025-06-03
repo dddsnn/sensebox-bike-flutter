@@ -31,8 +31,8 @@ class HomeScreen extends StatelessWidget {
           SliverPersistentHeader(
             delegate: _SliverAppBarDelegate(
               minHeight: MediaQuery.of(context).size.height * 0.33,
-              maxHeight: MediaQuery.of(context).size.height *
-                  (bleBloc.isConnected ? 0.65 : 0.85),
+              maxHeight: MediaQuery.of(context).size.height * 0.2,
+              // (bleBloc.isConnected ? 0.65 : 0.85),
               child: Stack(
                 children: [
                   const SizedBox(
@@ -75,13 +75,13 @@ class _SenseBoxSelectionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final OpenSenseMapBloc osemBloc = Provider.of<OpenSenseMapBloc>(context);
-    
+
     // Show the button only if the user is authenticated
     if (!osemBloc.isAuthenticated) {
       return const SizedBox
           .shrink(); // Return an empty widget if not authenticated
     }
-  
+
     return IconButton.outlined(
         style: OutlinedButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
@@ -261,6 +261,7 @@ class _ConnectButton extends StatelessWidget {
     );
   }
 }
+
 // Start/Stop button
 class _StartStopButton extends StatelessWidget {
   final RecordingBloc recordingBloc;
@@ -352,12 +353,25 @@ class _SensorGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final widgets = sensorBloc.getSensorWidgets();
+    // String avail = sensorBloc.bleBloc.availableCharacteristics.value
+    //     .map((c) => c.characteristicUuid)
+    //     .toString();
     return SliverGrid(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
       ),
+      // delegate: SliverChildListDelegate(widgets +
+      //     [
+      //       Text((await getApplicationDocumentsDirectory()).path.toString()),
+      //     ]),
+      // delegate: SliverChildBuilderDelegate(
+      //   (BuildContext context, int index) {
+      //     return Text('widget $index');
+      //   },
+      //   childCount: 11,
+      // ),
       delegate: SliverChildBuilderDelegate(
         (BuildContext context, int index) {
           return index < widgets.length ? widgets[index] : null;

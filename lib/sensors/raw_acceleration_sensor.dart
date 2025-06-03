@@ -1,10 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:core'; // TODO remove++++++++++++
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:sensebox_bike/blocs/ble_bloc.dart';
 import 'package:sensebox_bike/blocs/geolocation_bloc.dart';
 import 'package:sensebox_bike/l10n/app_localizations.dart';
+import 'package:sensebox_bike/main.dart';
 import 'package:sensebox_bike/models/geolocation_data.dart';
 import 'package:sensebox_bike/services/isar_service.dart';
 import 'package:sensebox_bike/sensors/sensor.dart';
@@ -108,8 +113,9 @@ class RawAccelerationSensor extends Sensor<List<RawAccelerationRecord>> {
   static const String sensorCharacteristicUuid =
       'b944af10-f495-4560-968f-2f0d18cab524';
 
-  int _numRecordsReceived = 0;
-  final _numRecordsStreamController = StreamController<int>();
+  final _records = <RawAccelerationRecord>[];
+  final _recordsChanged = StreamController<void>();
+  // String _directory = 'unknown'; // TODO remove=++++++++++++
 
   RawAccelerationSensor(
       BleBloc bleBloc, GeolocationBloc geolocationBloc, IsarService isarService)
@@ -119,6 +125,48 @@ class RawAccelerationSensor extends Sensor<List<RawAccelerationRecord>> {
   @override
   get uiPriority => 25;
 
+  // @override
+  // void startListening() async {
+  //   _directory = (await getApplicationDocumentsDirectory()).path;
+
+  //   // final a = directory.path;
+  //   super.startListening();
+  // }
+
+  // Future<String> _saveCsvFile(TrackData track, String csvString) async {
+  //   final directory = await getApplicationDocumentsDirectory();
+
+  //   if (track.geolocations.isEmpty) {
+  //     throw Exception("Track has no geolocations");
+  //   }
+
+  //   String formattedTimestamp = DateFormat('yyyy-MM-dd_HH-mm')
+  //       .format(track.geolocations.first.timestamp);
+
+  //   String trackName = "senseBox_bike_$formattedTimestamp";
+
+  //   final filePath = '${directory.path}/$trackName.csv';
+  //   final file = File(filePath);
+
+  //   await file.writeAsString(csvString);
+  //   return filePath;
+  // }
+  @override
+  void stopListening() async {
+    print('raw accel stop listening-----------------------------');
+    // REFACTOR is this the right place to write a file?++++++++++
+    final List<Map> recordsMap = [
+      for (final r in _records)
+        {'millisSinceDeviceStartup': r.millisSinceDeviceStartup, 'z': r.z}
+    ];
+    final encodedRecords = jsonEncode(recordsMap);
+    final directory = await getApplicationDocumentsDirectory();
+    String tsString = DateTime.now().toIso8601String();
+    final file = File('${directory.path}/$tsString.json');
+    await file.writeAsString(encodedRecords);
+    super.stopListening();
+  }
+
   @override
   List<RawAccelerationRecord> decodeCharacteristicData(Uint8List bytes) {
     return decodeRawAccelerationRecords(bytes);
@@ -126,8 +174,8 @@ class RawAccelerationSensor extends Sensor<List<RawAccelerationRecord>> {
 
   @override
   void onDataReceived(List<RawAccelerationRecord> data) {
-    _numRecordsReceived += data.length;
-    _numRecordsStreamController.add(_numRecordsReceived);
+    _records.addAll(data);
+    _recordsChanged.add(null);
   }
 
   @override
@@ -135,18 +183,20 @@ class RawAccelerationSensor extends Sensor<List<RawAccelerationRecord>> {
 
   @override
   Widget buildWidget() {
-    return StreamBuilder<int>(
-      stream: _numRecordsStreamController.stream,
-      initialData: 0,
+    // TODO++++++++++
+    return StreamBuilder<void>(
+      stream: _recordsChanged.stream,
+      initialData: null,
       builder: (context, snapshot) {
-        final numRecordsReceived = snapshot.data;
+        final numRecordsReceived = _records.length;
         return SensorCard(
             title: AppLocalizations.of(context)!.sensorRawAcceleration,
             icon: Icons.vibration,
             color: Colors.greenAccent,
             child: AspectRatio(
                 aspectRatio: 1.4,
-                child: Text('records received: $numRecordsReceived')));
+                child: Text(
+                    'path: $asdfDataDir'))); //records received: $numRecordsReceived')));
       },
     );
   }

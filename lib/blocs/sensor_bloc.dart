@@ -80,8 +80,9 @@ class SensorBloc with ChangeNotifier {
         continue;
       }
       if (availableCharacteristics
-          .map((e) => e.uuid.toString())
-          .contains(sensor.characteristicUuid)) {
+              .map((e) => e.uuid.toString())
+              .contains(sensor.characteristicUuid) ||
+          true) {
         availableSensors.add(sensor);
       }
     }

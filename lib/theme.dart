@@ -19,11 +19,11 @@ final lightTheme = ThemeData(
       secondary: Colors.black12,
       tertiary: Colors.lightGreen),
   canvasColor: Colors.grey[50],
-  cardTheme: CardTheme(
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(24),
-    ),
-  ),
+  // cardTheme: CardTheme(
+  //   shape: RoundedRectangleBorder(
+  //     borderRadius: BorderRadius.circular(24),
+  //   ),
+  // ),
 );
 
 final darkTheme = ThemeData(
@@ -45,9 +45,9 @@ final darkTheme = ThemeData(
       secondary: Colors.white,
       tertiary: Colors.green,
       surface: Color(0xFF121212)),
-  cardTheme: CardTheme(
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(24),
-    ),
-  ),
+  // cardTheme: CardTheme(
+  //   shape: RoundedRectangleBorder(
+  //     borderRadius: BorderRadius.circular(24),
+  //   ),
+  // ),
 );
