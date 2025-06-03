@@ -10,6 +10,62 @@ import 'package:sensebox_bike/services/isar_service.dart';
 import 'package:sensebox_bike/sensors/sensor.dart';
 import 'package:sensebox_bike/ui/widgets/sensor/sensor_card.dart';
 
+/// Raised when a ByteDataStream doesn't find enough bytes left in the buffer.
+class NotEnoughBytes implements Exception {
+  final String valueKind;
+  final int valueSize, bytesRemaining;
+
+  NotEnoughBytes(this.valueKind, this.valueSize, this.bytesRemaining);
+
+  @override
+  String toString() {
+    return 'not enough bytes to read a $valueKind (need $valueSize, have only '
+        '$bytesRemaining)';
+  }
+}
+
+/// A [ByteData]-like wrapper keeping track of its reading position.
+///
+/// Read typed data with the chosen endian from the input bytes. The position in
+/// the buffer is incremented automatically. Check how many bytes remain with
+/// [bytesRemaining].
+class ByteDataStream {
+  final int _length;
+  final ByteData _data;
+  final Endian _endian;
+  int _i = 0;
+
+  ByteDataStream(Uint8List bytes, {Endian endian = Endian.big})
+      : _length = bytes.length,
+        _data = ByteData.view(bytes.buffer),
+        _endian = endian;
+
+  get bytesRemaining => _length - _i;
+
+  int readUint8() {
+    return _read<int>('uint8', (i, _) => _data.getUint8(i), 1);
+  }
+
+  int readUint32() {
+    return _read<int>('uint32', _data.getUint32, 4);
+  }
+
+  double readFloat32() {
+    return _read<double>('float32', _data.getFloat32, 4);
+  }
+
+  T _read<T>(String valueKind, T Function(int offset, Endian endian) getValue,
+      int valueSize) {
+    try {
+      final value = getValue(_i, _endian);
+      _i += valueSize;
+      return value;
+    } on RangeError {
+      throw NotEnoughBytes(valueKind, valueSize, bytesRemaining);
+    }
+  }
+}
+
 class RawAccelerationRecord {
   final int millisSinceDeviceStartup;
   final double z;
@@ -18,24 +74,32 @@ class RawAccelerationRecord {
 
 List<RawAccelerationRecord> decodeRawAccelerationRecords(Uint8List bytes) {
   List<RawAccelerationRecord> records = [];
-  if (bytes.length < 8) {
-    return records;
-  }
-  final data = ByteData.view(bytes.buffer);
-  int i = 0, millis = 0;
-  while (i + 5 <= bytes.length) {
-    if (i == 0) {
-      // First record, full uint32 milliseconds timestamp.
-      millis = data.getUint32(i, Endian.big);
-      i += 4;
-    } else {
-      // Subsequent record, uint8 timestamp difference to previous one.
-      millis += data.getUint8(i);
-      i += 1;
+  final stream = ByteDataStream(bytes, endian: Endian.big);
+  int millis = 0;
+  while (stream.bytesRemaining > 0) {
+    try {
+      if (records.isEmpty) {
+        // First record, full uint32 milliseconds timestamp.
+        millis = stream.readUint32();
+      } else {
+        final firstTimestampByte = stream.readUint8();
+        if (firstTimestampByte != 0) {
+          // Subsequent record short form, uint8 timestamp difference to
+          // previous one.
+          millis += firstTimestampByte;
+        } else {
+          // Subsequent record long form, first byte only informed us that the
+          // next 4 bytes are a full timestamp again.
+          millis = stream.readUint32();
+        }
+      }
+      final z = stream.readFloat32();
+      records.add(RawAccelerationRecord(millis, z));
+    } on NotEnoughBytes catch (e) {
+      print(
+          'Unexpected end of input while parsing raw acceleration records: $e');
+      break;
     }
-    final z = data.getFloat32(i, Endian.big);
-    i += 4;
-    records.add(RawAccelerationRecord(millis, z));
   }
   return records;
 }
