@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:core';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:sensebox_bike/blocs/ble_bloc.dart';
 import 'package:sensebox_bike/blocs/geolocation_bloc.dart';
@@ -104,12 +108,19 @@ List<RawAccelerationRecord> decodeRawAccelerationRecords(Uint8List bytes) {
   return records;
 }
 
+class RawAccelerationRecords {
+  final DateTime receiveTime;
+  final List<RawAccelerationRecord> records;
+  RawAccelerationRecords(this.receiveTime, this.records);
+}
+
 class RawAccelerationSensor extends Sensor<List<RawAccelerationRecord>> {
   static const String sensorCharacteristicUuid =
       'b944af10-f495-4560-968f-2f0d18cab524';
 
-  int _numRecordsReceived = 0;
-  final _numRecordsStreamController = StreamController<int>();
+  final _accelRecords = <RawAccelerationRecords>[];
+  final _geoDatas = <GeolocationData>[];
+  final _change = StreamController<void>();
 
   RawAccelerationSensor(
       BleBloc bleBloc, GeolocationBloc geolocationBloc, IsarService isarService)
@@ -120,33 +131,72 @@ class RawAccelerationSensor extends Sensor<List<RawAccelerationRecord>> {
   get uiPriority => 25;
 
   @override
+  void stopListening() async {
+    // TODO Writing a file here is an ugly hack that I did because I didn't want
+    // to figure out how to store the data properly.
+    final Map recordsMap = {
+      'rawAccelerationsRecords': [
+        for (final rs in _accelRecords)
+          {
+            'receiveTime': rs.receiveTime.toIso8601String(),
+            'rawAccelerations': [
+              for (final r in rs.records)
+                {
+                  'millisSinceDeviceStartup': r.millisSinceDeviceStartup,
+                  'z': r.z
+                }
+            ]
+          }
+      ],
+      'geoLocationDatas': [
+        for (final d in _geoDatas)
+          {
+            'receiveTime': d.timestamp.toIso8601String(),
+            'lon': d.longitude,
+            'lat': d.latitude,
+            'speed': d.speed
+          }
+      ]
+    };
+    final encodedRecords = jsonEncode(recordsMap);
+    Directory directory = await getApplicationDocumentsDirectory();
+    String tsString = DateTime.now().toIso8601String();
+    final file = File('${directory.path}/$tsString.json');
+    await file.writeAsString(encodedRecords);
+    super.stopListening();
+  }
+
+  @override
   List<RawAccelerationRecord> decodeCharacteristicData(Uint8List bytes) {
     return decodeRawAccelerationRecords(bytes);
   }
 
   @override
   void onDataReceived(List<RawAccelerationRecord> data) {
-    _numRecordsReceived += data.length;
-    _numRecordsStreamController.add(_numRecordsReceived);
+    _accelRecords.add(RawAccelerationRecords(DateTime.now(), data));
+    _change.add(null);
   }
 
   @override
-  void onChangedGeolocation(GeolocationData geolocationData) {}
+  void onChangedGeolocation(GeolocationData geolocationData) {
+    _geoDatas.add(geolocationData);
+    _change.add(null);
+  }
 
   @override
   Widget buildWidget() {
-    return StreamBuilder<int>(
-      stream: _numRecordsStreamController.stream,
-      initialData: 0,
+    return StreamBuilder<void>(
+      stream: _change.stream,
+      initialData: null,
       builder: (context, snapshot) {
-        final numRecordsReceived = snapshot.data;
         return SensorCard(
             title: AppLocalizations.of(context)!.sensorRawAcceleration,
             icon: Icons.vibration,
             color: Colors.greenAccent,
             child: AspectRatio(
                 aspectRatio: 1.4,
-                child: Text('records received: $numRecordsReceived')));
+                child:
+                    Text('record blocks received: ${_accelRecords.length}')));
       },
     );
   }
